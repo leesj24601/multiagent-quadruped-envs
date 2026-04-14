@@ -4,13 +4,10 @@ This repository extends [MQE (Multi-agent Quadruped Environment)](https://github
 
 ## Demo
 
-**go1pushball** — Two agents cooperate to push a ball through a hole in a wall.
-
-https://github.com/user-attachments/assets/cc727ce2-4228-4916-89b9-49324e75010e
-
-**go1gatewithbutton** — One agent presses a button to open a gate while the other passes through.
-
-https://github.com/user-attachments/assets/173e111e-10f3-4aec-a1d2-6f7b33fcf416
+| go1pushball | go1gatewithbutton |
+|:-:|:-:|
+| Two agents cooperate to push a ball through a hole in a wall. | One agent presses a button to open a gate while the other passes through. |
+| <img src="docs/static/videos/go1pushball.gif" width=320> | <img src="docs/static/videos/go1gatewithbutton.gif" width=320> |
 
 ---
 
