@@ -2,6 +2,18 @@
 
 This repository extends [MQE (Multi-agent Quadruped Environment)](https://github.com/ziyanx02/multiagent-quadruped-environment) with new cooperative tasks designed for multi-agent reinforcement learning research on quadruped robots.
 
+## Demo
+
+**go1pushball** — Two agents cooperate to push a ball through a hole in a wall.
+
+https://github.com/user-attachments/assets/cc727ce2-4228-4916-89b9-49324e75010e
+
+**go1gatewithbutton** — One agent presses a button to open a gate while the other passes through.
+
+https://github.com/user-attachments/assets/173e111e-10f3-4aec-a1d2-6f7b33fcf416
+
+---
+
 ## New Tasks (This Work)
 
 Three cooperative tasks were added on top of the original MQE framework:
@@ -106,10 +118,10 @@ The Task Name in the following table corresponds to `--task TASK_NAME` in task s
 |go1sheep-hard|Two quadrupeds play the role of sheepdogs to herd nine sheep to go through the gate.|<img src="docs/static/images/tasks/SheepDogHard.png" width = 200>|
 |go1pushbox|Two quadrupeds push the heavy box through the gate.|<img src="docs/static/images/tasks/PushBox.png" width = 200>|
 |go1football-defender|An opposite quadruped plays as a defender, who will keep at the middle point between the ball and the goal. Two quadrupeds need to collaborate to kick the ball into the goal.|<img src="docs/static/images/tasks/Football2vs1.png" width = 200>|
-|**go1pushball** *(new)*|Two quadrupeds cooperate to push a ball through a circular hole in a wall. Reward is shaped by ball progress, agent proximity, and contact.|https://github.com/user-attachments/assets/cc727ce2-4228-4916-89b9-49324e75010e|
+|**go1pushball** *(new)*|Two quadrupeds cooperate to push a ball through a circular hole in a wall. Reward is shaped by ball progress, agent proximity, and contact.|See Demo above|
 |**go1pushbox_light** *(new)*|Variant of go1pushbox with a lighter box, reducing the force needed for cooperation.|—|
 |**go1pushbox_medium** *(new)*|Variant of go1pushbox with a medium-weight box.|—|
-|**go1gatewithbutton** *(new)*|One agent presses a button to raise a blocking gate while the other passes through. Requires role differentiation and coordination.|https://github.com/user-attachments/assets/173e111e-10f3-4aec-a1d2-6f7b33fcf416|
+|**go1gatewithbutton** *(new)*|One agent presses a button to raise a blocking gate while the other passes through. Requires role differentiation and coordination.|See Demo above|
 
 ### Competitive Tasks
 
