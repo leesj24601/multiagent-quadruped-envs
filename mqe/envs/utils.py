@@ -14,10 +14,14 @@ from mqe.envs.configs.go1_football_config import Go1FootballDefenderCfg, Go1Foot
 from mqe.envs.configs.go1_seesaw_config import Go1SeesawCfg
 from mqe.envs.configs.go1_door_config import Go1DoorCfg
 from mqe.envs.configs.go1_pushbox_config import Go1PushboxCfg
+from mqe.envs.configs.go1_pushbox_light_config import Go1PushboxLightCfg
+from mqe.envs.configs.go1_pushbox_medium_config import Go1PushboxMediumCfg
 from mqe.envs.configs.go1_tug_config import Go1TugCfg
 from mqe.envs.configs.go1_wrestling_config import Go1WrestlingCfg
 from mqe.envs.configs.go1_rotation_config import Go1RotationCfg
 from mqe.envs.configs.go1_bridge_config import Go1BridgeCfg
+from mqe.envs.configs.go1_pushball_config import Go1PushBallCfg
+from mqe.envs.configs.go1_gate_with_button_config import Go1GateWithButtonCfg
 
 # wrappers
 from mqe.envs.wrappers.empty_wrapper import EmptyWrapper
@@ -30,6 +34,8 @@ from mqe.envs.wrappers.go1_tug_wrapper import Go1TugWrapper
 from mqe.envs.wrappers.go1_wrestling_wrapper import Go1WrestlingWrapper
 from mqe.envs.wrappers.go1_rotation_wrapper import Go1RotationWrapper
 from mqe.envs.wrappers.go1_bridge_wrapper import Go1BridgeWrapper
+from mqe.envs.wrappers.go1_pushball_wrapper import Go1PushBallWrapper
+from mqe.envs.wrappers.go1_gate_with_button_wrapper import Go1GateWithButtonWrapper
 
 from mqe.utils import get_args, make_env
 
@@ -81,6 +87,16 @@ ENV_DICT = {
         "config": Go1PushboxCfg,
         "wrapper": Go1PushboxWrapper
     },
+    "go1pushbox-light": {
+        "class": Go1Object,
+        "config": Go1PushboxLightCfg,
+        "wrapper": Go1PushboxWrapper
+    },
+    "go1pushbox-medium": {
+        "class": Go1Object,
+        "config": Go1PushboxMediumCfg,
+        "wrapper": Go1PushboxWrapper
+    },
     "go1tug": {
         "class": Go1Object,
         "config": Go1TugCfg,
@@ -101,11 +117,21 @@ ENV_DICT = {
         "config": Go1BridgeCfg,
         "wrapper": Go1BridgeWrapper
     },
+    "go1pushball": {
+        "class": Go1Object,
+        "config": Go1PushBallCfg,
+        "wrapper": Go1PushBallWrapper
+    },
     # "go1door": {
     #     "class": Go1Object,
     #     "config": Go1DoorCfg,
     #     "wrapper": Go1SeesawWrapper
     # },
+    "go1gatewithbutton": {
+        "class": Go1Object,
+        "config": Go1GateWithButtonCfg,
+        "wrapper": Go1GateWithButtonWrapper
+    },
 }
 
 def make_mqe_env(env_name: str, args=None, custom_cfg=None) -> Tuple[LeggedRobotField, LeggedRobotFieldCfg]:

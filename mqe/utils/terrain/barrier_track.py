@@ -361,6 +361,98 @@ class BarrierTrack:
         
         return block_heighfield, block_info, heighfield_noise_mask, height_offset_px, reset_pos_px
 
+    def get_hole_wall_block(self,
+            wall_thickness,
+            block_resolution,
+            difficulty = None,
+            block_origin_px = None
+        ):
+        block_heighfield = np.zeros(block_resolution, dtype= np.float32)
+        heighfield_noise_mask = np.ones(block_resolution, dtype= np.float32)
+        reset_pos_px = None
+        
+        hole_radius = self.track_kwargs["hole_wall"]["hole_radius"]
+        wall_height = np.random.uniform(*self.track_kwargs["wall_height"]) \
+                                if isinstance(self.track_kwargs["wall_height"], (tuple, list)) \
+                                else self.track_kwargs["wall_height"]
+        
+        # Dimensions in px
+        # width_px = int(hole_width / self.cfg.horizontal_scale) # Not used
+        
+        # Center the hole
+        mid_y_px = int(block_resolution[1] / 2)
+        
+        wall_thickness_px = np.ceil(wall_thickness / self.cfg.horizontal_scale).astype(int)
+        
+        # Create Trimeshes
+        block_origin_m = block_origin_px * np.array([self.cfg.horizontal_scale, self.cfg.horizontal_scale, self.cfg.vertical_scale])
+        
+        block_length_m = block_resolution[0] * self.cfg.horizontal_scale
+        block_width_m = block_resolution[1] * self.cfg.horizontal_scale
+        
+        wall_x_offset = block_length_m / 2
+        
+        # Wall size: [thickness, width, height]
+        wall_size = np.array([wall_thickness, block_width_m, wall_height])
+        
+        # Hole center relative to wall center
+        # y is 0 (centered in width)
+        # z is hole_radius + something? Let's center it at some height.
+        # Usually ball is at z=0.6 (init) but radius is 0.3, so center is 0.3.
+        # Let's align hole center with ball center.
+        # hole_center_z = 0.3
+        hole_center_z = self.track_kwargs["hole_wall"].get("hole_center_z", 0.3)
+        hole_center_y = 0.0
+        
+        # Wall center position
+        # x: block_origin_m[0] + wall_x_offset
+        # y: block_origin_m[1] + block_width_m / 2
+        # z: block_origin_m[2] + wall_height / 2
+        wall_center_pos = block_origin_m + np.array([wall_x_offset, block_width_m/2, wall_height/2])
+        
+        # Adjust hole_center_z relative to wall center
+        # wall center z is wall_height / 2
+        # hole absolute z is hole_center_z
+        # relative z = hole_absolute_z - wall_center_z
+        hole_center_z_rel = hole_center_z - (wall_height / 2)
+        
+        wall_tm = trimesh.wall_with_hole_trimesh(
+            wall_size,
+            hole_radius,
+            hole_center_y,
+            hole_center_z_rel,
+            wall_center_pos
+        )
+        self.add_trimesh_to_sim(wall_tm, np.zeros(3))
+        
+        # Block info
+        # Store relative position of the hole center
+        # Relative to block origin?
+        # hole_pos should be absolute or relative to block?
+        # Wrapper expects relative to env origin?
+        # Wrapper: self.hole_pos = obs.env_info["hole_pos"] - self.env.env_origins
+        # So here we should store absolute position or relative to block start?
+        # Usually env_info stores absolute position if it's a single value per env.
+        # But here we are returning block_info which gets aggregated.
+        # Let's check get_gate_block.
+        # "gate_deviation": offset_px + random_px ...
+        # It seems to be relative to block start?
+        
+        # Store the absolute position of the hole center
+        # x: block_origin_m[0] + wall_x_offset
+        # y: block_origin_m[1] + block_width_m / 2
+        # z: hole_center_z
+        hole_pos_abs = block_origin_m + np.array([wall_x_offset, block_width_m/2, 0.0])
+        hole_pos_abs[2] = hole_center_z
+        
+        block_info = {
+            "hole_pos": torch.tensor(hole_pos_abs, dtype=torch.float32, device=self.device),
+        }
+        
+        height_offset_px = 0
+        
+        return block_heighfield, block_info, heighfield_noise_mask, height_offset_px, reset_pos_px
+
     ##### initialize and building tracks then entire terrain #####
     def build_heightfield_raw(self):
         self.border = int(self.cfg.border_size / self.cfg.horizontal_scale)

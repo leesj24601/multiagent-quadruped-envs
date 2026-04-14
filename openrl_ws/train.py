@@ -59,6 +59,9 @@ def train(args):
             use_wandb=args.use_wandb,
             use_tensorboard=args.use_tensorboard,
         )
+        if getattr(args, "checkpoint", None) is not None:
+            agent.load(args.checkpoint)
+            print(f"Loaded checkpoint from {args.checkpoint}")
         agent.train(
             total_time_steps=args.train_timesteps,
             logger=logger
@@ -66,7 +69,10 @@ def train(args):
     else:
         agent.train(total_time_steps=args.train_timesteps)
     # dir_name = "./checkpoints/" + args.task + "/" + start_time_str
-    dir_name = "./checkpoints/" + args.task
+    if getattr(args, "exp_name", None):
+        dir_name = "./checkpoints/" + args.task + "/" + args.exp_name
+    else:
+        dir_name = "./checkpoints/" + args.task
     agent.save(dir_name)
 
 if __name__ == '__main__':
