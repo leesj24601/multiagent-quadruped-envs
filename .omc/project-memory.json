@@ -1,0 +1,202 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1776136001598,
+  "projectRoot": "/home/cvr/Desktop/sj/multiagent-quadruped-environment",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs"
+    ],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "checkpoints": {
+      "path": "checkpoints",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1776136001595,
+      "keyFiles": []
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 2,
+      "lastAccessed": 1776136001595,
+      "keyFiles": [
+        "index.html"
+      ]
+    },
+    "isaacgym": {
+      "path": "isaacgym",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1776136001595,
+      "keyFiles": [
+        "README.txt",
+        "create_conda_env_rlgpu.sh"
+      ]
+    },
+    "log": {
+      "path": "log",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1776136001595,
+      "keyFiles": []
+    },
+    "mqe": {
+      "path": "mqe",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1776136001595,
+      "keyFiles": [
+        "__init__.py"
+      ]
+    },
+    "mqe.egg-info": {
+      "path": "mqe.egg-info",
+      "purpose": null,
+      "fileCount": 5,
+      "lastAccessed": 1776136001595,
+      "keyFiles": [
+        "PKG-INFO",
+        "SOURCES.txt",
+        "dependency_links.txt",
+        "requires.txt",
+        "top_level.txt"
+      ]
+    },
+    "openrl_ws": {
+      "path": "openrl_ws",
+      "purpose": null,
+      "fileCount": 5,
+      "lastAccessed": 1776136001596,
+      "keyFiles": [
+        "test.py",
+        "test.sh",
+        "train.py",
+        "train.sh",
+        "utils.py"
+      ]
+    },
+    "resources": {
+      "path": "resources",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1776136001596,
+      "keyFiles": [
+        "visualize.py"
+      ]
+    },
+    "docs/static": {
+      "path": "docs/static",
+      "purpose": "Static files",
+      "fileCount": 0,
+      "lastAccessed": 1776136001596,
+      "keyFiles": []
+    },
+    "isaacgym/assets": {
+      "path": "isaacgym/assets",
+      "purpose": "Static assets",
+      "fileCount": 0,
+      "lastAccessed": 1776136001596,
+      "keyFiles": []
+    },
+    "isaacgym/docs": {
+      "path": "isaacgym/docs",
+      "purpose": "Documentation",
+      "fileCount": 11,
+      "lastAccessed": 1776136001596,
+      "keyFiles": [
+        "about_gym.html",
+        "faqs.html",
+        "genindex.html"
+      ]
+    },
+    "mqe/utils": {
+      "path": "mqe/utils",
+      "purpose": "Utility functions",
+      "fileCount": 8,
+      "lastAccessed": 1776136001596,
+      "keyFiles": [
+        "__init__.py",
+        "console.py",
+        "helpers.py"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "README.md",
+      "accessCount": 3,
+      "lastAccessed": 1776137201872,
+      "type": "file"
+    },
+    {
+      "path": "mqe/envs/wrappers/go1_pushball_wrapper.py",
+      "accessCount": 1,
+      "lastAccessed": 1776136509214,
+      "type": "file"
+    },
+    {
+      "path": "mqe/envs/wrappers/go1_gate_with_button_wrapper.py",
+      "accessCount": 1,
+      "lastAccessed": 1776136510425,
+      "type": "file"
+    },
+    {
+      "path": "mqe/envs/configs/go1_pushball_config.py",
+      "accessCount": 1,
+      "lastAccessed": 1776136510559,
+      "type": "file"
+    },
+    {
+      "path": "mqe/envs/configs/go1_gate_with_button_config.py",
+      "accessCount": 1,
+      "lastAccessed": 1776136511400,
+      "type": "file"
+    },
+    {
+      "path": "mqe/envs/configs/go1_pushbox_light_config.py",
+      "accessCount": 1,
+      "lastAccessed": 1776136511627,
+      "type": "file"
+    },
+    {
+      "path": "NOTES.md",
+      "accessCount": 1,
+      "lastAccessed": 1776136732834,
+      "type": "file"
+    },
+    {
+      "path": "mqe/envs/configs/go1_pushbox_config.py",
+      "accessCount": 1,
+      "lastAccessed": 1776136799339,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

@@ -1,19 +1,36 @@
-# ![](docs/static/images/sheep.png) Multi-agent Quadruped Environment
+# Multi-agent Quadruped Environment (Extended)
 
-Multi-agent Quadruped Environment(MQE) is a multi-functional and easy-to-use quadruped-simulation environment based on Isaac Gym that supports multi-agent tasks. Currently, MQE supports following features:
+This repository extends [MQE (Multi-agent Quadruped Environment)](https://github.com/ziyanx02/multiagent-quadruped-environment) with new cooperative tasks designed for multi-agent reinforcement learning research on quadruped robots.
+
+## New Tasks (This Work)
+
+Three cooperative tasks were added on top of the original MQE framework:
+
+| Task Name | Description |
+|:-:|:-:|
+| `go1pushball` | Two agents cooperate to push a ball through a hole in a wall. Reward is shaped by ball movement toward the hole, agent proximity to the ball, and contact. |
+| `go1pushbox_light` / `go1pushbox_medium` | Variants of the original pushbox task with lighter or medium-weight boxes, enabling easier coordination. |
+| `go1gatewithbutton` | One agent presses a button to open a gate while the other passes through. Requires role separation and cooperation. |
+
+Each task includes a config file (`mqe/envs/configs/`), wrapper (`mqe/envs/wrappers/`), and corresponding URDF assets (`resources/objects/`).
+
+---
+
+## Original MQE
+
+Multi-agent Quadruped Environment (MQE) is a multi-functional and easy-to-use quadruped-simulation environment based on Isaac Gym that supports multi-agent tasks. Currently, MQE supports following features:
 
 * Interaction between multiple quadrupeds and articulated objects.
 * Train high-level planning policy only with built-in walk policy.
 * Build your terrain from blocks like LEGO.
 * Click-to-use RL pipeline through [OpenRL](https://github.com/OpenRL-Lab/openrl) on pre-defined cooperative and competitive tasks.
 
-## Useful Links ##
+**Project Website:** https://ziyanx02.github.io/multiagent-quadruped-environment/
 
-Project Website: https://ziyanx02.github.io/multiagent-quadruped-environment/
+**Paper:** https://arxiv.org/abs/2403.16015
 
-Paper: https://arxiv.org/abs/2403.16015
+## Installation
 
-## Installation ##
 1. Create a new Python virtual env or conda environment with Python 3.6, 3.7, or 3.8 (3.8 recommended)
     ```
     conda create -n mqe python=3.8
@@ -35,7 +52,7 @@ Paper: https://arxiv.org/abs/2403.16015
 5. Check MQE is available by running
     - `python ./test.py`
 
-## Code Structure ##
+## Code Structure
 
 Environment for each task is defined by:
 - a class for controlling objects involved in the task. `./mqe/envs/go1/go1.py` is a base class for Unitree Go1 robot with locomotion policy implemented in [walk-these-ways](https://github.com/Improbable-AI/walk-these-ways). `./mqe/envs/npc/` includes several classes created for different interactive objects.
@@ -44,7 +61,8 @@ Environment for each task is defined by:
 
 Blocks used in terrain registration is defined in `./mqe/utils/terrain/barrier_track.py`.
 
-## Usage ##
+## Usage
+
 1. Try different tasks
 
     `python ./test.py`
@@ -60,7 +78,7 @@ Blocks used in terrain registration is defined in `./mqe/utils/terrain/barrier_t
     - `--rl_device RL_DEVICE` to specify device for running OpenRL
     - `--headless` to render headlessly
     - `--seed RANDOM_SEED` to specify random seed
-    - `--config /PATH/TO/CONFIG` to speicy cinfiguration for OpenRL
+    - `--config /PATH/TO/CONFIG` to specify configuration for OpenRL
     - `--use_wandb` to use WanDB
     - `--use_tensorboard` to use TensorBoard
 
@@ -74,11 +92,12 @@ Blocks used in terrain registration is defined in `./mqe/utils/terrain/barrier_t
 
     Currently, existing tasks are exhibited in `./mqe/envs/utils.py` for reference. To create new terrain blocks, please add corresponding `BarrierTrack.get_BLOCK_NAME_block()` function in `./mqe/utils/terrain/barrier_track.py`. Please refer to the following tasks for different kinds of new task: `go1gate` for tasks without objects; `go1seesaw` for tasks with fixed or free objects; `go1sheep-easy` for tasks with objects serving as NPC; `go1football-defender` for tasks with robots serving as NPC.
 
-## Existing Tasks ##
+## Existing Tasks
 
 The Task Name in the following table corresponds to `--task TASK_NAME` in task selection. Check `./mqe/envs/utils.py` for the latest list of existing tasks.
 
-### Collaborative Tasks ###
+### Collaborative Tasks
+
 | Task Name | Task Description | Demonstration |
 |:-:|:-:|:-:|
 |go1gate|Two quadrupeds go through one narrow gate sequentially. This task requires the agents to avoid possible collisions between two robots.|<img src="docs/static/images/tasks/NarrowGate.png" width = 200>|
@@ -87,8 +106,12 @@ The Task Name in the following table corresponds to `--task TASK_NAME` in task s
 |go1sheep-hard|Two quadrupeds play the role of sheepdogs to herd nine sheep to go through the gate.|<img src="docs/static/images/tasks/SheepDogHard.png" width = 200>|
 |go1pushbox|Two quadrupeds push the heavy box through the gate.|<img src="docs/static/images/tasks/PushBox.png" width = 200>|
 |go1football-defender|An opposite quadruped plays as a defender, who will keep at the middle point between the ball and the goal. Two quadrupeds need to collaborate to kick the ball into the goal.|<img src="docs/static/images/tasks/Football2vs1.png" width = 200>|
+|**go1pushball** *(new)*|Two quadrupeds cooperate to push a ball through a circular hole in a wall. Reward is shaped by ball progress, agent proximity, and contact.|<video src="docs/static/videos/go1pushball.webm" width=200 autoplay loop muted></video>|
+|**go1pushbox_light** *(new)*|Variant of go1pushbox with a lighter box, reducing the force needed for cooperation.|—|
+|**go1pushbox_medium** *(new)*|Variant of go1pushbox with a medium-weight box.|—|
+|**go1gatewithbutton** *(new)*|One agent presses a button to raise a blocking gate while the other passes through. Requires role differentiation and coordination.|<video src="docs/static/videos/go1gatewithbutton.webm" width=200 autoplay loop muted></video>|
 
-### Competitive Tasks ###
+### Competitive Tasks
 
 | Task Name | Task Description | Demonstration |
 |:-:|:-:|:-:|
@@ -99,7 +122,7 @@ The Task Name in the following table corresponds to `--task TASK_NAME` in task s
 |go1football-1vs1|Football game with 1 player each side.|<img src="docs/static/images/tasks/Football1vs1.jpg" width = 200>|
 |go1football-2vs2|Football game with 2 player each side.|<img src="docs/static/images/tasks/Football2vs2.jpg" width = 200>|
 
-## Trouble Shooting ##
+## Trouble Shooting
 
 1. If you get the following error: `ImportError: libpython3.8m.so.1.0: cannot open shared object file: No such file or directory`, it is also possible that you need to do `export LD_LIBRARY_PATH=/PATH/TO/LIBPYTHON/DIRECTORY` / `export LD_LIBRARY_PATH=/PATH/TO/CONDA/envs/YOUR_ENV_NAME/lib`. You can also try: `sudo apt install libpython3.8`.
 
@@ -107,9 +130,9 @@ The Task Name in the following table corresponds to `--task TASK_NAME` in task s
 
 3. If you get `Segmentation fault (core dumped)` while rendering frames using A100/A800, please switch to GeFoece graphic cards.
 
-## Citing MQE ##
+## Citing MQE
 
-If our work has been helpful to you. please feel free to cite us:
+If the original MQE work has been helpful, please cite:
 
 ```
 @misc{xiong2024mqe,
