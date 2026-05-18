@@ -1,5 +1,11 @@
 # Multi-agent Quadruped Environment (Extended)
 
+<p align="center">
+  <a href="README.ko.md">
+    <img src="https://img.shields.io/badge/README-KO%20%E2%86%90%20CLICK!-blue?style=for-the-badge" alt="한국어 README로 이동" height="44">
+  </a>
+</p>
+
 This repository extends [MQE (Multi-agent Quadruped Environment)](https://github.com/ziyanx02/multiagent-quadruped-environment) with new cooperative tasks designed for multi-agent reinforcement learning research on quadruped robots.
 
 ## Demo
@@ -8,20 +14,67 @@ This repository extends [MQE (Multi-agent Quadruped Environment)](https://github
 |:-:|:-:|
 | Two agents cooperate to push a ball through a hole in a wall. | One agent presses a button to open a gate while the other passes through. |
 | <img src="docs/static/videos/go1pushball.gif" width=320> | <img src="docs/static/videos/go1gatewithbutton.gif" width=320> |
+| <a href="https://youtu.be/AEJCpX3f1oI"><img src="https://img.shields.io/badge/YouTube-Watch-red?logo=youtube&logoColor=white" alt="Watch go1pushball on YouTube"></a> | <a href="https://youtu.be/ABykIjPuPos"><img src="https://img.shields.io/badge/YouTube-Watch-red?logo=youtube&logoColor=white" alt="Watch go1gatewithbutton on YouTube"></a> |
 
 ---
 
 ## New Tasks (This Work)
 
-Three cooperative tasks were added on top of the original MQE framework:
+Two core cooperative tasks and two pushbox difficulty variants were added on top of the original MQE framework:
 
 | Task Name | Description |
 |:-:|:-:|
 | `go1pushball` | Two agents cooperate to push a ball through a hole in a wall. Reward is shaped by ball movement toward the hole, agent proximity to the ball, and contact. |
-| `go1pushbox_light` / `go1pushbox_medium` | Variants of the original pushbox task with lighter or medium-weight boxes, enabling easier coordination. |
 | `go1gatewithbutton` | One agent presses a button to open a gate while the other passes through. Requires role separation and cooperation. |
+| `go1pushbox-light` / `go1pushbox-medium` | Variants of the original pushbox task with lighter or medium-weight boxes, enabling easier coordination. |
 
 Each task includes a config file (`mqe/envs/configs/`), wrapper (`mqe/envs/wrappers/`), and corresponding URDF assets (`resources/objects/`).
+
+---
+
+## Evaluation Results
+
+The following retained results were evaluated with `eval/evaluate.py` under the same conditions: 100 episodes, seed `0`, and the same per-episode step limit.
+
+| Task | Algorithm | Success Definition | Success |
+|:-:|:-:|:-|:-:|
+| `go1pushball` | PPO | `dist(ball_position, target_position) < 0.2` | 60 / 100 (60%) |
+| `go1pushball` | MAT | `dist(ball_position, target_position) < 0.2` | 92 / 100 (92%) |
+| `go1gatewithbutton` | PPO | `any(agent_position.x > 4.0)` (4.0: gate exit line) | 9 / 100 (9%) |
+| `go1gatewithbutton` | MAT | `any(agent_position.x > 4.0)` (4.0: gate exit line) | 99 / 100 (99%) |
+
+---
+
+## Task Implementation Summary
+
+### `go1pushball`
+
+- Config: `mqe/envs/configs/go1_pushball_config.py`
+- Wrapper: `mqe/envs/wrappers/go1_pushball_wrapper.py`
+- Asset: `resources/objects/ball_heavy.urdf`
+- Setup: 2 agents, 1 NPC ball, `hole_wall` terrain, 15-second episode
+- Reward: ball progress toward the hole, per-agent ball approach, ball contact, hole success reward
+- Termination: ends on success, with roll/pitch-based termination enabled by default
+
+### `go1gatewithbutton`
+
+- Config: `mqe/envs/configs/go1_gate_with_button_config.py`
+- Wrapper: `mqe/envs/wrappers/go1_gate_with_button_wrapper.py`
+- Asset: `resources/objects/gate.urdf`
+- Setup: 2 agents, 1 fixed NPC gate, button position `[3.0, -1.0]`, button radius `0.5`
+- Gate logic: raises gate height to `2.0` while the button is pressed, otherwise keeps it at `0.5`
+- Reward: button distance improvement, forward progress before `success_x=4.0`, shared button press reward (`0.1`), agent proximity penalty (`distance < 1.5`), gate success reward (`50`)
+- Termination: ends with success when at least one agent reaches the area beyond the gate
+- Note: agent roles are not hard-coded; button approach and gate passage are used to encourage role separation.
+
+### `go1pushbox-light` / `go1pushbox-medium`
+
+- Config: `mqe/envs/configs/go1_pushbox_light_config.py`, `mqe/envs/configs/go1_pushbox_medium_config.py`
+- Wrapper: `mqe/envs/wrappers/go1_pushbox_wrapper.py`
+- Asset: `resources/objects/box_light.urdf`, `resources/objects/box_medium.urdf`
+- Setup: auxiliary variants of the original `go1pushbox` using the same wrapper with adjusted box mass
+- Mass: light box 1, medium box 3, original box 6
+- Reward: box x-axis progress is shared by both agents
 
 ---
 
@@ -96,6 +149,7 @@ Blocks used in terrain registration is defined in `./mqe/utils/terrain/barrier_t
     `python ./openrl_ws/test.py --algo ALGO_NAME --task TASK_NAME --checkpoint /PATH/TO/CHECKPOINT`
     - `--record_video` to record video (frames)
     - `--algo ALGO_NAME` should be specified as well as `--checkpoint`
+    - To reproduce the success-rate table, run `python ./eval/evaluate.py --algo ALGO_NAME --task TASK_NAME --checkpoint /PATH/TO/CHECKPOINT --episodes 100 --seed 0 --headless`
 
 4. Create new task
 
@@ -116,8 +170,8 @@ The Task Name in the following table corresponds to `--task TASK_NAME` in task s
 |go1pushbox|Two quadrupeds push the heavy box through the gate.|<img src="docs/static/images/tasks/PushBox.png" width = 200>|
 |go1football-defender|An opposite quadruped plays as a defender, who will keep at the middle point between the ball and the goal. Two quadrupeds need to collaborate to kick the ball into the goal.|<img src="docs/static/images/tasks/Football2vs1.png" width = 200>|
 |**go1pushball** *(new)*|Two quadrupeds cooperate to push a ball through a circular hole in a wall. Reward is shaped by ball progress, agent proximity, and contact.|See Demo above|
-|**go1pushbox_light** *(new)*|Variant of go1pushbox with a lighter box, reducing the force needed for cooperation.|—|
-|**go1pushbox_medium** *(new)*|Variant of go1pushbox with a medium-weight box.|—|
+|**go1pushbox-light** *(new)*|Variant of go1pushbox with a lighter box, reducing the force needed for cooperation.|—|
+|**go1pushbox-medium** *(new)*|Variant of go1pushbox with a medium-weight box.|—|
 |**go1gatewithbutton** *(new)*|One agent presses a button to raise a blocking gate while the other passes through. Requires role differentiation and coordination.|See Demo above|
 
 ### Competitive Tasks
@@ -137,7 +191,7 @@ The Task Name in the following table corresponds to `--task TASK_NAME` in task s
 
 2. If you get the following error: `AttributeError: module 'numpy' has no attribute 'float'.`, it's because of the version of package `numpy`. First uninstall `numpy` by `pip uninstall numpy`, and install `numpy` of specific version by `pip install numpy==1.20.3`.
 
-3. If you get `Segmentation fault (core dumped)` while rendering frames using A100/A800, please switch to GeFoece graphic cards.
+3. If you get `Segmentation fault (core dumped)` while rendering frames using A100/A800, please switch to GeForce graphic cards.
 
 ## Citing MQE
 

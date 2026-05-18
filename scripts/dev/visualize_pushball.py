@@ -1,17 +1,22 @@
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 import isaacgym
 from mqe.envs.utils import make_mqe_env
 from mqe.utils import get_args
 import torch
-import numpy as np
-import imageio
+
 
 def visualize():
     args = get_args()
     args.task = "go1pushball"
     args.num_envs = 1
-    args.headless = True # We will capture frames manually if possible, or just print coords
-    args.record_video = False # We'll try to capture frames manually
+    args.headless = True  # We will capture frames manually if possible, or just print coords
+    args.record_video = False  # We'll try to capture frames manually
     
     # Force CPU for easier debugging if needed, but GPU is fine
     

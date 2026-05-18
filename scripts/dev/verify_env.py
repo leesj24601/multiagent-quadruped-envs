@@ -1,8 +1,15 @@
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 import isaacgym
 from mqe.envs import *
 from mqe.utils import task_registry
 import torch
+
 
 def verify_environment():
     env_cfg, train_cfg = task_registry.get_cfgs(name="go1gatewithbutton")
@@ -28,6 +35,7 @@ def verify_environment():
         print(f"Step {i}: Reward shape {rewards.shape}, Done {dones}")
         
     print("Verification complete.")
+
 
 if __name__ == "__main__":
     verify_environment()

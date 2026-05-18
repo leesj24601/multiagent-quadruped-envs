@@ -121,6 +121,25 @@ class LeggedRobotField(LeggedRobot):
     def check_termination(self):
         return_ = super().check_termination()
         if not hasattr(self.cfg, "termination"): return return_
+
+        contact_reset_delay_steps = getattr(self.cfg.termination, "contact_reset_delay_steps", None)
+        if contact_reset_delay_steps is not None:
+            if not hasattr(self, "contact_reset_counter"):
+                self.contact_reset_counter = torch.zeros(
+                    self.num_envs,
+                    dtype=torch.long,
+                    device=self.device,
+                    requires_grad=False,
+                )
+
+            contact_now = self.collide_buf.to(torch.bool)
+            self.contact_reset_counter = torch.where(
+                contact_now,
+                self.contact_reset_counter + 1,
+                torch.zeros_like(self.contact_reset_counter),
+            )
+            delayed_contact_reset = self.contact_reset_counter >= contact_reset_delay_steps
+            self.reset_buf = self.time_out_buf | delayed_contact_reset
         
         r, p, y = get_euler_xyz(self.base_quat)
         r[r > np.pi] -= np.pi * 2 # to range (-pi, pi)
@@ -143,6 +162,12 @@ class LeggedRobotField(LeggedRobot):
             self.z_high_term_buff = (z > self.cfg.termination.z_high_kwargs["threshold"]).reshape(self.num_envs, -1).sum(1).to(torch.bool)
             self.reset_buf |= self.z_high_term_buff
         
+        return return_
+
+    def _reset_buffers(self, env_ids):
+        return_ = super()._reset_buffers(env_ids)
+        if hasattr(self, "contact_reset_counter"):
+            self.contact_reset_counter[env_ids] = 0
         return return_
 
     def _fill_extras(self, env_ids):

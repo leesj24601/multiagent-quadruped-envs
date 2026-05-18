@@ -1,16 +1,21 @@
+from pathlib import Path
+import sys
 
-import numpy as np
-import os
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 import isaacgym
 from mqe.utils import get_args
 import torch
 from mqe.envs.utils import make_mqe_env, custom_cfg
 
+
 if __name__ == '__main__':
     args = get_args()
     task_name = "go1pushball"
     args.num_envs = 1
-    args.headless = True # Run headless for verification
+    args.headless = True  # Run headless for verification
     args.record_video = False
 
     env, env_cfg = make_mqe_env(task_name, args, custom_cfg(args))
@@ -35,6 +40,6 @@ if __name__ == '__main__':
             # obs shape is (num_envs, num_agents, 21 + num_agents)
             # We can check env.hole_pos directly if we want
             if hasattr(env, 'hole_pos'):
-                 print(f"Hole Pos (relative): {env.hole_pos[0, 0]}")
+                print(f"Hole Pos (relative): {env.hole_pos[0, 0]}")
 
     print("Verification finished.")

@@ -102,6 +102,7 @@ class Go1GateWithButtonCfg(Go1Cfg):
 
     class termination(Go1Cfg.termination):
         check_obstacle_conditioned_threshold = False
+        contact_reset_delay_steps = 50
         termination_terms = [
             "roll",
             "pitch",
@@ -131,5 +132,11 @@ class Go1GateWithButtonCfg(Go1Cfg):
         # Custom config for the game logic
         button_pos = [3.0, -1.0] # In front of the right wall (Y < 0)
         button_radius = 0.5
+        button_reward_scale = 0.1
+        button_approach_reward_scale = 1.0
+        forward_progress_reward_scale = 1.0
+        min_agent_distance = 1.5
+        separation_penalty_scale = -0.1
+        success_x = 4.0
         gate_open_height = 2.0
         gate_closed_height = 0.5

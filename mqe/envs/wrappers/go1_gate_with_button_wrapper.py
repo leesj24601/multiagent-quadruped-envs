@@ -19,125 +19,58 @@ class Go1GateWithButtonWrapper(EmptyWrapper):
         self.button_radius = self.env.cfg.game.button_radius
         self.gate_open_height = self.env.cfg.game.gate_open_height
         self.gate_closed_height = self.env.cfg.game.gate_closed_height
-        
-        # Store initial gate position (assuming 1 NPC which is the gate)
-        # We need to wait for reset to get the actual tensor values, but we can prepare indices
-        self.gate_indices = None
+        self.success_x = getattr(self.env.cfg.game, "success_x", 4.0)
+        self.button_reward_scale = getattr(self.env.cfg.game, "button_reward_scale", 0.1)
+        self.button_approach_reward_scale = getattr(self.env.cfg.game, "button_approach_reward_scale", self.target_reward_scale)
+        self.forward_progress_reward_scale = getattr(self.env.cfg.game, "forward_progress_reward_scale", self.target_reward_scale)
+        self.min_agent_distance = getattr(self.env.cfg.game, "min_agent_distance", 1.5)
+        self.separation_penalty_scale = getattr(self.env.cfg.game, "separation_penalty_scale", -0.1)
+
+        self.last_button_dists = None
 
         self.reward_buffer = {
+            "button approach reward": 0,
+            "forward progress reward": 0,
             "button press reward": 0,
+            "separation punishment": 0,
             "success reward": 0,
             "step count": 0
         }
 
-    def reset(self):
-        obs_buf = self.env.reset()
-        
-        # Initialize gate indices if not done
-        if self.gate_indices is None:
-            # Assuming the last actors are NPCs. 
-            # In Go1Cfg, num_agents=2, num_npcs=1.
-            # Actor indices in root_states: [agent1, agent2, ..., npc1, ...]
-            # We need to find the global index of the gate NPC.
-            # The environment should have `actor_indices` or similar.
-            # In LeggedRobot, `self.actor_indices` contains indices for all actors including envs.
-            # But we want to modify specific actors.
-            # Let's rely on `self.env.root_states_npc` which is a view or copy?
-            # Actually `LeggedRobot` updates `self.root_states` and then `self.gym.set_actor_root_state_tensor`.
-            # We need to modify `self.env.root_states` directly at the NPC index.
-            pass
+    def _relative_base_pos(self):
+        base_pos = self.env.base_pos.view(self.env.num_envs, self.env.num_agents, 3)
+        return base_pos - self.env.env_origins.unsqueeze(1)
 
-        # Initial observation construction (similar to pushball)
+    def _button_dists(self, rel_pos):
+        return torch.norm(rel_pos[:, :, :2] - self.button_pos, dim=2)
+
+    def _build_obs(self, obs_buf):
         base_pos = obs_buf.base_pos.view(self.env.num_envs, self.env.num_agents, 3)
         base_pos = base_pos.view(-1, 3)
         base_rpy = obs_buf.base_rpy
         base_info = torch.cat([base_pos, base_rpy], dim=1).reshape([self.env.num_envs, self.env.num_agents, -1])
-        
-        # Add button position to obs
-        # Button pos is static relative to env origin? 
-        # Yes, defined in cfg.game.button_pos.
-        # We should broadcast it.
-        button_pos_batch = self.button_pos.unsqueeze(0).unsqueeze(0).repeat(self.env.num_envs, self.num_agents, 1) # (num_envs, num_agents, 2)
-        
-        # Gate pos (NPC)
+        button_pos_batch = self.button_pos.unsqueeze(0).unsqueeze(0).repeat(self.env.num_envs, self.num_agents, 1)
         gate_pos = self.env.root_states_npc[:, :3] - self.env.env_origins
         gate_pos_batch = gate_pos[:, :2].unsqueeze(1).repeat(1, self.num_agents, 1)
 
-        obs = torch.cat([self.obs_ids, base_info, torch.flip(base_info, [1]),
-                         button_pos_batch, gate_pos_batch,
-                         self.root_states_npc[:, 3:7].unsqueeze(1).repeat(1, self.num_agents, 1)], dim=2)
+        return torch.cat([self.obs_ids, base_info, torch.flip(base_info, [1]),
+                          button_pos_batch, gate_pos_batch,
+                          self.root_states_npc[:, 3:7].unsqueeze(1).repeat(1, self.num_agents, 1)], dim=2)
 
-        return obs
+    def reset(self):
+        obs_buf = self.env.reset()
+        self.last_button_dists = self._button_dists(self._relative_base_pos())
+        return self._build_obs(obs_buf)
 
     def step(self, action):
-        # 1. Check Button Logic BEFORE physics step (to open gate for this step)
-        # Get agent positions relative to env origin
-        # self.env.base_pos is (num_envs * num_agents, 3)
-        # self.env.env_origins is (num_envs, 3)
-        # We need to handle the broadcasting carefully.
-        
-        # Reshape base_pos to (num_envs, num_agents, 3)
-        current_base_pos = self.env.base_pos.view(self.env.num_envs, self.env.num_agents, 3)
-        # env_origins = self.env.env_origins.unsqueeze(1) # (num_envs, 1, 3)
-        # rel_pos = current_base_pos - env_origins
-        
-        # But wait, self.env.base_pos is absolute world coordinates.
-        # self.button_pos is relative to env origin (from config).
-        # So we need to compare (base_pos - env_origin) with button_pos.
-        
-        # Calculate distance to button
-        # button_pos is (2,)
-        # rel_pos[:, :, :2] is (num_envs, num_agents, 2)
-        
-        rel_pos = current_base_pos - self.env.env_origins.unsqueeze(1)
-        dists_to_button = torch.norm(rel_pos[:, :, :2] - self.button_pos, dim=2) # (num_envs, num_agents)
-        
-        # Check if ANY agent is on the button
-        button_pressed = torch.any(dists_to_button < self.button_radius, dim=1) # (num_envs,)
-        
-        # DEBUG: Print distance and pressed state
-        if self.env.num_envs == 1:
-            print(f"DEBUG: Base Pos: {current_base_pos[0, 0].tolist()}")
-            print(f"DEBUG: Env Origin: {self.env.env_origins[0].tolist()}")
-            print(f"DEBUG: Rel Pos: {rel_pos[0, 0].tolist()}")
-            print(f"DEBUG: Button Pos: {self.button_pos.tolist()}")
-            print(f"DEBUG: Dist: {dists_to_button[0].tolist()}, Pressed: {button_pressed[0].item()}")
-        
-        # 2. Move Gate
-        # We need to modify self.env.root_states for the NPCs.
-        # The NPC indices in root_states.
-        # Assuming 1 NPC per env.
-        # self.env.root_states is (num_envs * (num_agents + num_npcs), 13)
-        # The layout is usually [agent1_env0, agent2_env0, npc1_env0, agent1_env1, ... ] OR grouped by type?
-        # Isaac Gym standard: actors are added sequentially per env.
-        # So for each env: Agent1, Agent2, NPC1.
-        # Index of NPC in env i: i * (num_agents + num_npcs) + num_agents
-        
-        total_actors_per_env = self.num_agents + self.env.num_npcs
-        npc_indices = torch.arange(self.env.num_envs, device=self.device) * total_actors_per_env + self.num_agents
-        
-        # Update Z position of gates
-        # We need to set the state in the simulation.
-        # self.env.root_states is a buffer. We update it and then call set_actor_root_state_tensor_indexed.
-        
-        # Get current NPC states
-        # We can just modify the z-coordinate.
-        
-        # Default closed height (from config or current)
-        # We want to set it to open_height if pressed, closed_height if not.
-        
+        rel_pos_before = self._relative_base_pos()
+        dists_to_button_before = self._button_dists(rel_pos_before)
+        button_pressed = torch.any(dists_to_button_before < self.button_radius, dim=1)
+
+        npc_indices = self.env.npc_indices[:, 0].long()
         target_z = torch.where(button_pressed, self.gate_open_height, self.gate_closed_height)
-        
-        # We need to be careful not to reset X, Y, Rot if they moved (though they are fixed base, so they shouldn't move).
-        # But to be safe, we just update Z.
-        # However, root_states contains global coordinates.
-        # So we need to keep X, Y as they are.
-        
-        # We can access self.env.root_states directly?
-        # Yes, LeggedRobot has self.root_states.
-        
         self.env.all_root_states[npc_indices, 2] = target_z + self.env.env_origins[:, 2]
-        
+
         self.env.gym.set_actor_root_state_tensor_indexed(
             self.env.sim,
             gymtorch.unwrap_tensor(self.env.all_root_states),
@@ -148,6 +81,8 @@ class Go1GateWithButtonWrapper(EmptyWrapper):
         # 3. Step Environment
         action = torch.clip(action, -1, 1)
         obs_buf, _, termination, info = self.env.step((action * self.action_scale).reshape(-1, self.action_space.shape[0]))
+        rel_pos_after = obs_buf.base_pos.view(self.env.num_envs, self.env.num_agents, 3)
+        dists_to_button_after = self._button_dists(rel_pos_after)
 
         # Debug Visualization: Draw Button
         # Always try to draw if num_envs is small enough
@@ -197,21 +132,51 @@ class Go1GateWithButtonWrapper(EmptyWrapper):
         self.reward_buffer["step count"] += 1
         reward = torch.zeros([self.env.num_envs, self.num_agents], device=self.env.device)
 
+        active_envs = ~termination.to(torch.bool)
+
+        if self.last_button_dists is None:
+            self.last_button_dists = dists_to_button_before
+
+        closest_button_before = self.last_button_dists.min(dim=1).values
+        closest_button_after = dists_to_button_after.min(dim=1).values
+        button_approach_reward = closest_button_before - closest_button_after
+        button_approach_reward = torch.clamp(button_approach_reward, -0.2, 0.2)
+        button_approach_reward = torch.where(
+            active_envs,
+            button_approach_reward * self.button_approach_reward_scale,
+            torch.zeros_like(button_approach_reward),
+        )
+        reward += button_approach_reward.unsqueeze(1)
+        self.reward_buffer["button approach reward"] += torch.sum(button_approach_reward).cpu()
+
+        forward_progress_reward = rel_pos_after[:, :, 0] - rel_pos_before[:, :, 0]
+        not_past_success = rel_pos_after[:, :, 0] < self.success_x
+        forward_progress_reward = torch.clamp(forward_progress_reward, -0.2, 0.2)
+        forward_progress_reward = torch.where(
+            active_envs.unsqueeze(1) & not_past_success,
+            forward_progress_reward * self.forward_progress_reward_scale,
+            torch.zeros_like(forward_progress_reward),
+        )
+        reward += forward_progress_reward
+        self.reward_buffer["forward progress reward"] += torch.sum(forward_progress_reward).cpu()
+
         # Button Reward (Shared)
         # Give reward if button is pressed
-        button_reward_scale = 0.1 # Decreased from 1.0 to avoid local optimum
-        reward += button_pressed.unsqueeze(1).float() * button_reward_scale
-        self.reward_buffer["button press reward"] += torch.sum(button_pressed.float()).cpu()
+        button_press_reward = button_pressed.float() * self.button_reward_scale
+        reward += button_press_reward.unsqueeze(1)
+        self.reward_buffer["button press reward"] += torch.sum(button_press_reward).cpu()
 
         # Distance Penalty (Encourage separation)
         # Calculate distance between agents
         # rel_pos is (num_envs, num_agents, 3)
         # Assuming 2 agents
         if self.num_agents == 2:
-            dist_between_agents = torch.norm(rel_pos[:, 0, :2] - rel_pos[:, 1, :2], dim=1)
+            dist_between_agents = torch.norm(rel_pos_after[:, 0, :2] - rel_pos_after[:, 1, :2], dim=1)
             # Penalty if too close (e.g., < 1.0m)
-            too_close = dist_between_agents < 1.5
-            reward[too_close, :] -= 0.1 # Penalty for both agents
+            too_close = dist_between_agents < self.min_agent_distance
+            separation_penalty = too_close.float() * self.separation_penalty_scale
+            reward += separation_penalty.unsqueeze(1)
+            self.reward_buffer["separation punishment"] += torch.sum(separation_penalty).cpu()
 
         # Success Reward (Passing the gate)
         # Check if agents are past the gate.
@@ -223,27 +188,16 @@ class Go1GateWithButtonWrapper(EmptyWrapper):
         # Let's reward if ANY agent passes the gate line.
         # But we want to avoid them just spawning past it (init is at 0).
         
-        agents_past_gate = rel_pos[:, :, 0] > 4.0
+        agents_past_gate = rel_pos_after[:, :, 0] > self.success_x
         success = torch.any(agents_past_gate, dim=1) # At least one passed
         
-        reward[success, :] += self.env.cfg.rewards.scales.success_reward_scale
+        success_reward = success.float() * self.success_reward_scale
+        reward += success_reward.unsqueeze(1)
         
         # Terminate if success
         termination[success] = True
-        self.reward_buffer["success reward"] += torch.sum(success.float()).cpu()
+        self.reward_buffer["success reward"] += torch.sum(success_reward).cpu()
+        self.last_button_dists = dists_to_button_after
 
         # Construct Observation (same as reset)
-        base_pos = obs_buf.base_pos.view(self.env.num_envs, self.env.num_agents, 3)
-        base_pos = base_pos.view(-1, 3)
-        base_rpy = obs_buf.base_rpy
-        base_info = torch.cat([base_pos, base_rpy], dim=1).reshape([self.env.num_envs, self.env.num_agents, -1])
-        
-        button_pos_batch = self.button_pos.unsqueeze(0).unsqueeze(0).repeat(self.env.num_envs, self.num_agents, 1)
-        gate_pos = self.env.root_states_npc[:, :3] - self.env.env_origins
-        gate_pos_batch = gate_pos[:, :2].unsqueeze(1).repeat(1, self.num_agents, 1)
-
-        obs = torch.cat([self.obs_ids, base_info, torch.flip(base_info, [1]),
-                         button_pos_batch, gate_pos_batch,
-                         self.root_states_npc[:, 3:7].unsqueeze(1).repeat(1, self.num_agents, 1)], dim=2)
-
-        return obs, reward, termination, info
+        return self._build_obs(obs_buf), reward, termination, info

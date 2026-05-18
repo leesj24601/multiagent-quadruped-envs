@@ -1,9 +1,15 @@
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 import isaacgym
 from mqe.envs.utils import make_mqe_env
 from mqe.utils import get_args
 import torch
-import numpy as np
+
 
 def verify_obs():
     args = get_args()
@@ -42,5 +48,7 @@ def verify_obs():
         # Ball should be around (2.0, 0.0)
         # Hole should be around (3.5, 0.0) (Block length 2.0 + 1.5?)
         # Let's check barrier_track.py for hole position logic
-        
-verify_obs()
+
+
+if __name__ == "__main__":
+    verify_obs()

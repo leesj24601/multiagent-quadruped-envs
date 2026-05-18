@@ -1,0 +1,5 @@
+timestamp,task,algo,checkpoint,episodes,max_steps,success_count,success_rate,num_envs,seed,success_definition
+2026-05-14T18:07:37,go1pushball,ppo,checkpoints/go1pushball/fair_pushball_ppo_50m/module.pt,100,751,60,0.600000,1,0,ball_to_hole_3d_distance_lt_0.2
+2026-05-15T09:39:54,go1pushball,mat,checkpoints/go1pushball/fair_pushball_mat_50m/module.pt,100,751,92,0.920000,1,0,ball_to_hole_3d_distance_lt_0.2
+2026-05-15T18:59:38,go1gatewithbutton,mat,checkpoints/go1gatewithbutton/fair_gatebutton_mat_50m/module.pt,100,751,99,0.990000,1,0,any_agent_x_gt_4.0
+2026-05-15T21:15:29,go1gatewithbutton,ppo,checkpoints/go1gatewithbutton/fair_gatebutton_ppo_50m/module.pt,100,751,9,0.090000,1,0,any_agent_x_gt_4.0

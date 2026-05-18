@@ -8,6 +8,7 @@ node_modules/
 dist/
 log/
 results/
+eval/results_*.csv
 checkpoints/
 isaacgym/
 
@@ -51,7 +52,14 @@ Thumbs.db
 *.flv
 *.mov
 *.wmv
+*.mp4
+*.webm
+*.mkv
 *.gif
+!docs/static/images/*.gif
+!docs/static/videos/*.mp4
+!docs/static/videos/*.webm
+!docs/static/videos/*.gif
 
 # VS Code
 .vscode
@@ -62,7 +70,15 @@ runs
 # other
 *.egg-info
 __pycache__
+.agents/
+.codex/
+.omc/
 .omx/
+/COMMANDS_KR.md
+/NOTES.md
+/todo.md
 *.ckpt
 *.pth
 *.pt
+!mqe/utils/locomotion_checkpoints/**/*.pt
+!resources/actuator_nets/*.pt
